@@ -1,6 +1,6 @@
 <template>
     <span class="switchable-input" :style="style">
-        <el-input ref="input" v-if="state === 'input'" size="mini" v-model="text" @blur="switchTo('text')"></el-input>
+        <el-input ref="input" v-if="state === 'input'" size="mini" v-model="text" @blur="switchTo('text')" @change="$emit('change', text)"></el-input>
         <span v-else @click="switchTo('input')" class="text">{{text}}</span>
     </span>
 </template>

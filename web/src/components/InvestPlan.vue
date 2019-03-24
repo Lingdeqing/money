@@ -63,6 +63,7 @@
           prop="date"
           label="日期"
           width="95">
+          <template slot-scope="{row}">{{row.date|day}}</template>
         </el-table-column>
         <el-table-column
           prop="target"
@@ -97,16 +98,17 @@
 </template>
 
 <script>
+import axios from 'axios';
 import SwitchableInput from "./SwitchableInput";
 // const db  = {
 //   current: 0, // 当前计划
 //   plans: [{ // 创建的计划
 //     createTime: 21545,
-//     config: {
+//     
 //       start: '',
 //       piece: 400,
 //       rate: 0.12
-//     },
+//    
 //   }],
 //   history: [  // 投资历史
 //   {
@@ -118,30 +120,21 @@ import SwitchableInput from "./SwitchableInput";
 //   ]
 // }
 
+const API = `http://localhost:3000/plans/`;
 // 接口1 获取页面初始化数据
-function getInitData(){
-  return  {
-    current: 0,
-    plans: [{ // 创建的计划
-      createTime: 1553331175270,
-      config: {
-        start: 1553331175270,
-        piece: 400,
-        rate: 0.12
-      },
-    }],
-    history: []
-  }
+async function getInitData(){
+  const {data} = await axios.post(`${API}getInitData`);
+  return data;
 }
 
 // 接口2 新建计划
-function createPlan(/*data*/){
-  // console.log(data);
+async function createPlan(data){
+  return (await axios.post(`${API}createPlan`, data)).data;
 }
 
 // 接口3 保存一次投资记录
-function saveInvest(){
-
+async function saveInvest(data){
+  return (await axios.post(`${API}saveInvest`, data)).data;
 }
 
 export default {
@@ -166,7 +159,7 @@ export default {
 
   //   }
   // },
-  mounted(){
+  async mounted(){
     
     // const db = {
     //   current: -1,
@@ -177,21 +170,21 @@ export default {
 
     // 可以点击日期查看之前的历史
 
-    const db = getInitData();
+    const db = await getInitData();
 
     if(db.current === -1){ // 没有则新建
       this.first = true;
     } else {  // 取之前的数据
       this.first = false;
-      const plan = db.plans[db.current].config;
+      const plan = db.plans[db.current];
       
       const rows = [];
       for(let i = 0; i < 10; i++){
         rows.push({
-          date: new Date(plan.start + i * 7 * 24 * 60 * 60 * 1000).format('yyyy-MM-dd'),
+          date: plan.start + i * 7 * 24 * 60 * 60 * 1000,
           target: plan.piece * i,
-          assets: null,
-          pay: null
+          assets: '',
+          pay: ''
         })
       }
       this.tableData = rows;
@@ -203,11 +196,31 @@ export default {
       const text = cell.querySelector('.text');
       text && text.click();
     },
-    saveInvest(row){
-      // console.log(row)
-      saveInvest(row)
+    async saveInvest(row){
+      // 保存后台
+      // 验证
+      const pay = Number(row.pay);
+      if(Number.isNaN(pay)){
+        return this.$message.error('实购金额必须是数字');
+      }
+
+      const assets = Number(row.assets);
+      if(Number.isNaN(assets)){
+        return this.$message.error('当前资产必须是数字');
+      }
+
+      const {code} = await saveInvest({
+        ...row,
+        pay,
+        assets
+      });
+      if(code !== 0){
+        this.$message.error('出错了: '+code)
+      } else if(row.pay !== '' && row.assets !== '') {
+        this.$message.success('编辑成功')
+      }
     },
-    create(){
+    async create(){
       // 保存后台
       // 验证
       if(!this.form.start){
@@ -223,11 +236,17 @@ export default {
       }
 
 
-      createPlan({
+      const {code} = await createPlan({
         start: this.form.start,
         piece,
         rate,
+        createTime: Date.now()
       });
+      if(code !== 0){
+        this.$message.error('出错了: '+code)
+      } else {
+        this.$message.success('创建计划成功')
+      }
     }
   },
   filters: {

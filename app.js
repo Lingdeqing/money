@@ -2,7 +2,8 @@ var Koa = new require('koa')
   , app = new Koa()
   , logger = require('koa-logger')
   , views = require('koa-views')
-  , onerror = require('koa-onerror');
+  , onerror = require('koa-onerror')
+  , cors = require('@koa/cors');
 
 var index = require('./routes/index');
 var users = require('./routes/users');
@@ -12,6 +13,7 @@ var plans = require('./routes/plans');
 onerror(app);
 
 // global middlewares
+app.use(cors());
 app.use(views('views', {
   root: __dirname + '/views',
   extension: 'jade',
@@ -26,6 +28,7 @@ app.use(async (ctx, next) => {
   console.log('%s %s - %s', ctx.method, ctx.url, ms);
 });
 
+// static
 app.use(require('koa-static')(__dirname + '/public'));
 
 // routes definition
