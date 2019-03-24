@@ -31,11 +31,10 @@ router.post('/getInitData', async (ctx, next) => {
     const plan = db.plans[db.current];
     const params = ctx.request.body;
     const start = params.start || (Date.now() - 5 * 7 * 24 * 60 * 60 * 1000);
-    console.log(new Date(start));
-    const startIndex = db.history.find(invest => {
+    const startIndex = db.history.findIndex(invest => {
       return isSameWeek(invest.date, start);
     })
-    const history = db.history.slice(startIndex, startIndex + 10);
+    const history = startIndex >= 0 ? db.history.slice(startIndex, startIndex + 10) : [];
     const len = history.length;
     let lastDate = len > 0 ? history[len - 1].date : getWeekSameDay(plan.start, start);
     const lastTarget = len > 0 ? history[len - 1].target : 0;

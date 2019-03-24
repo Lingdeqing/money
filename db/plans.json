@@ -14,5 +14,18 @@
       "createTime": 1553417824656
     }
   ],
-  "history": []
+  "history": [
+    {
+      "date": 1550480986539,
+      "target": 400,
+      "assets": 20,
+      "pay": 0
+    },
+    {
+      "date": 1550480986539,
+      "target": 400,
+      "assets": 20,
+      "pay": 30
+    }
+  ]
 }

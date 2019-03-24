@@ -33,6 +33,7 @@
         </el-form-item>
         
         <el-form-item>
+          <el-button @click="isChangePlanView = false">取消</el-button>
           <el-button type="primary" @click="createPlan">创建计划</el-button>
         </el-form-item>
       </el-form>
@@ -59,11 +60,15 @@
         stripe
         class="plan-table"
         @cell-click="handleCellClick"
+        @header-click="handleHeadClick"
         >
         <el-table-column
           prop="date"
           label="日期"
           width="95">
+          <template slot="header">
+            <TheadDatePicker ref="startSetter" v-model="start">日期</TheadDatePicker>
+          </template>
           <template slot-scope="{row}">{{row.date|day}}</template>
         </el-table-column>
         <el-table-column
@@ -101,6 +106,7 @@
 <script>
 import axios from 'axios';
 import SwitchableInput from "./SwitchableInput";
+import TheadDatePicker from "./TheadDatePicker";
 // const db  = {
 //   current: 0, // 当前计划
 //   plans: [{ // 创建的计划
@@ -123,9 +129,8 @@ import SwitchableInput from "./SwitchableInput";
 
 const API = `http://localhost:3000/plans/`;
 // 接口1 获取页面初始化数据
-async function getInitData(){
-  const {data} = await axios.post(`${API}getInitData`);
-  return data;
+async function getInitData(data){
+  return (await axios.post(`${API}getInitData`, data)).data;
 }
 
 // 接口2 新建计划
@@ -140,11 +145,12 @@ async function saveInvest(data){
 
 export default {
   components: {
-    SwitchableInput
+    SwitchableInput,
+    TheadDatePicker
   },
   data(){
     return {
-      test: '123',
+      start: '',
       first: false,
       isChangePlanView: false,
       form: {
@@ -166,6 +172,9 @@ export default {
     }
   },
   watch: {
+    start(){
+      this.getInitData();
+    },
     createPlanVisible: {
       immediate: true,
       handler(){
@@ -198,6 +207,11 @@ export default {
     
   },
   methods: {
+    handleHeadClick(row){
+      if(row.label === '日期'){
+        this.$refs.startSetter.open();
+      }
+    },
     handleCellClick(row, column, cell){
       const text = cell.querySelector('.text');
       text && text.click();
@@ -262,7 +276,9 @@ export default {
       this.isChangePlanView = true;
     },
     async getInitData(){
-      const db = await getInitData();
+      const db = await getInitData({
+        start: this.start
+      });
 
       if(!db.plan){ // 没有则新建
         this.first = true;
