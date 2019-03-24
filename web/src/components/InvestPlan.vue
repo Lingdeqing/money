@@ -127,7 +127,7 @@ import TheadDatePicker from "./TheadDatePicker";
 //   ]
 // }
 
-const API = `http://localhost:3000/plans/`;
+const API = `http://localhost:8001/plans/`;
 // 接口1 获取页面初始化数据
 async function getInitData(data){
   return (await axios.post(`${API}getInitData`, data)).data;
