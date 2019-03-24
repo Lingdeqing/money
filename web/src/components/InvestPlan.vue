@@ -1,8 +1,9 @@
 <template>
   <div>
     <!-- 第一次 -->
-    <template v-if="first">
+    <template v-if="createPlanVisible">
       <el-alert
+        v-if="first"
         title="第一次使用，请先创建第一个定投计划"
         type="info"
         :closable="false"
@@ -32,7 +33,7 @@
         </el-form-item>
         
         <el-form-item>
-          <el-button type="primary" @click="create">创建计划</el-button>
+          <el-button type="primary" @click="createPlan">创建计划</el-button>
         </el-form-item>
       </el-form>
     </template>
@@ -41,12 +42,12 @@
       <el-card class="control-panel" style="" shadow="none">
         <div slot="header" class="clearfix">
           <span>当前计划</span>
-          <el-button style="float: right; padding: 3px 0" type="text">修改计划</el-button>
+          <el-button style="float: right; padding: 3px 0" type="text" @click="changePlan">修改计划</el-button>
         </div>
         <el-form label-width="90px" size="mini">
-          <el-form-item label="起投日期">{{form.start|day}}</el-form-item>
-          <el-form-item label="每期投入额">￥{{form.piece}}</el-form-item>
-          <el-form-item label="手续费">{{form.rate}}%</el-form-item>
+          <el-form-item label="起投日期">{{currentPlan.start|day}}</el-form-item>
+          <el-form-item label="每期投入额">￥{{currentPlan.piece}}</el-form-item>
+          <el-form-item label="手续费">{{currentPlan.rate}}%</el-form-item>
         </el-form>
         
       </el-card>
@@ -145,7 +146,13 @@ export default {
     return {
       test: '123',
       first: false,
+      isChangePlanView: false,
       form: {
+        start: Date.now(),
+        piece: 400,
+        rate: 0.15
+      },
+      currentPlan: {
         start: Date.now(),
         piece: 400,
         rate: 0.15
@@ -153,12 +160,29 @@ export default {
       tableData: []
     }
   },
-  // watch: {
-  //   tableData: {
-  //     deep: true,
-
-  //   }
-  // },
+  computed: {
+    createPlanVisible(){
+      return this.first || this.isChangePlanView;
+    }
+  },
+  watch: {
+    createPlanVisible: {
+      immediate: true,
+      handler(){
+        if(this.first){
+          this.form = {
+            start: Date.now(),
+            piece: 400,
+            rate: 0.15
+          }
+        } else if(this.isChangePlanView){
+          this.form = {
+            ...this.currentPlan
+          } 
+        }
+      }
+    }
+  },
   async mounted(){
     
     // const db = {
@@ -177,6 +201,7 @@ export default {
     } else {  // 取之前的数据
       this.first = false;
       const plan = db.plans[db.current];
+      this.currentPlan = {...plan};
       
       const rows = [];
       for(let i = 0; i < 10; i++){
@@ -220,7 +245,7 @@ export default {
         this.$message.success('编辑成功')
       }
     },
-    async create(){
+    async createPlan(){
       // 保存后台
       // 验证
       if(!this.form.start){
@@ -235,18 +260,24 @@ export default {
         return this.$message.error('手续费必须是不小于0的数字');
       }
 
-
-      const {code} = await createPlan({
+      const newPlan = {
         start: this.form.start,
         piece,
         rate,
         createTime: Date.now()
-      });
+      };
+      const {code} = await createPlan(newPlan);
       if(code !== 0){
         this.$message.error('出错了: '+code)
       } else {
+        this.currentPlan = newPlan;
+        this.first = false;
+        this.isChangePlanView = false;
         this.$message.success('创建计划成功')
       }
+    },
+    changePlan(){
+      this.isChangePlanView = true;
     }
   },
   filters: {
