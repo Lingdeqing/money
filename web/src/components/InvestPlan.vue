@@ -194,26 +194,7 @@ export default {
 
     // 可以点击日期查看之前的历史
 
-    const db = await getInitData();
-
-    if(db.current === -1){ // 没有则新建
-      this.first = true;
-    } else {  // 取之前的数据
-      this.first = false;
-      const plan = db.plans[db.current];
-      this.currentPlan = {...plan};
-      
-      const rows = [];
-      for(let i = 0; i < 10; i++){
-        rows.push({
-          date: plan.start + i * 7 * 24 * 60 * 60 * 1000,
-          target: plan.piece * i,
-          assets: '',
-          pay: ''
-        })
-      }
-      this.tableData = rows;
-    }
+    this.getInitData();
     
   },
   methods: {
@@ -270,6 +251,7 @@ export default {
       if(code !== 0){
         this.$message.error('出错了: '+code)
       } else {
+        await this.getInitData();
         this.currentPlan = newPlan;
         this.first = false;
         this.isChangePlanView = false;
@@ -278,6 +260,17 @@ export default {
     },
     changePlan(){
       this.isChangePlanView = true;
+    },
+    async getInitData(){
+      const db = await getInitData();
+
+      if(!db.plan){ // 没有则新建
+        this.first = true;
+      } else {  // 取之前的数据
+        this.first = false;
+        this.currentPlan = db.plan;
+        this.tableData = db.history;
+      }
     }
   },
   filters: {
