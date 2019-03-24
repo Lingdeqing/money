@@ -16,10 +16,27 @@ function isSameWeek(t1, t2) {
   var now_other = parseInt(t2 / oneDayTime);
   return parseInt((old_count + 4) / 7) == parseInt((now_other + 4) / 7);
 }
+function isSameDay(t1, t2) {
+  const d1 = new Date(t1), d2 = new Date(t2);
+  return d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth() && d1.getDate() === d2.getDate();
+}
+function whichWeek(start, t){
+  const index = Math.ceil((t - start) / (1000 * 60 * 60 * 24 * 7));
+  return index;
+}
 // 获取同一个周几
-function getWeekSameDay(t1, t2) {
+function getSameWeekDay(t1, t2) {
   var d1 = new Date(t1).getDay(), d2 = new Date(t2).getDay();
   return t2 + (d1 - d2) * 1000 * 60 * 60 * 24;
+}
+// 获取下一个投资日
+function getNextPlanDay(start){
+  const now =  Date.now();
+  let next = getSameWeekDay(start, now);
+  if(next < now){
+    next = getSameWeekDay(start, now + 1000 * 60 * 60 * 24 * 7);
+  }
+  return next;
 }
 router.post('/getInitData', async (ctx, next) => {
   const db = await fs.readJSON(dbPath);
@@ -30,19 +47,28 @@ router.post('/getInitData', async (ctx, next) => {
   } else {
     const plan = db.plans[db.current];
     const params = ctx.request.body;
-    const start = params.start || (Date.now() - 5 * 7 * 24 * 60 * 60 * 1000);
-    const startIndex = db.history.findIndex(invest => {
-      return isSameWeek(invest.date, start);
-    })
-    const history = startIndex >= 0 ? db.history.slice(startIndex, startIndex + 10) : [];
-    const len = history.length;
-    let lastDate = len > 0 ? history[len - 1].date : getWeekSameDay(plan.start, start);
-    const lastTarget = len > 0 ? history[len - 1].target : 0;
+    const history = [];
+    const allHistories = db.history.sort((a, b) => {  //  从小到大排序
+      return a.date - b.date;
+    });
+    if(params.start){ // 设定起始日期，从起始日期向后查找10条记录
+      allHistories.forEach(item => {
+        if(item.date >= params.start && history.length < 10){
+          history.push(item);
+        }
+      });
+    } else { // 查找前面5条记录 
+      history.push(...allHistories.slice(-5));
+    }
 
-    for (let i = 0; i < 10 - len; i++) {
+    // 如果不够10条　则当前计划　从下一个计划日开始补齐　空白记录
+    const nextPlanDate = getNextPlanDay(plan.start);
+    const lastTarget = history.length > 0 ? history[history.length - 1].target : 0;
+    const len = 10 - history.length;
+    for(let i = 0; i < len; i++){
       history.push({
-        date: lastDate + i * 7 * 24 * 60 * 60 * 1000,
-        target: lastTarget + plan.piece * (1 + i),
+        date: nextPlanDate + i * 7 * 24 * 60 * 60 * 1000,
+        target: lastTarget + (1+i) * plan.piece,
         assets: '',
         pay: ''
       })
@@ -53,20 +79,6 @@ router.post('/getInitData', async (ctx, next) => {
       history
     }
   }
-
-  // {
-  //   current: -1
-  //   // current: 0,
-  //   // plans: [{ // 创建的计划
-  //   //   createTime: 1553331175270,
-  //   //   config: {
-  //   //     start: 1553331175270,
-  //   //     piece: 400,
-  //   //     rate: 0.12
-  //   //   },
-  //   // }],
-  //   // history: []
-  // };
 });
 
 router.post('/createPlan', async (ctx, next) => {
@@ -83,7 +95,16 @@ router.post('/createPlan', async (ctx, next) => {
 router.post('/saveInvest', async (ctx, next) => {
   const invest = ctx.request.body;
   const db = await fs.readJSON(dbPath);
-  db.history.push(invest);
+  let overwrite = false;
+  db.history.forEach(item => {
+    if(isSameDay(item.date, invest.date)){
+      overwrite = true;
+      Object.assign(item, invest);
+    }
+  })
+  if(!overwrite){
+    db.history.push(invest);
+  }
   await saveDb(db);
   ctx.body = {
     code: 0

@@ -229,6 +229,13 @@ export default {
         return this.$message.error('当前资产必须是数字');
       }
 
+      const oneDay = 1000 * 60 * 60 * 24;
+      if(parseInt(row.date /oneDay)  > parseInt(Date.now() / oneDay)){
+        row.assets = '';
+        row.pay = '';
+        return this.$message.error('不能编辑超过今天的数据');
+      }
+
       const {code} = await saveInvest({
         ...row,
         pay,
