@@ -5,6 +5,14 @@ const router = Router({ prefix: '/plans' }).loadMethods();
 
 const dbPath = './db/plans.json';
 
+if(!fs.existsSync(dbPath)){
+  saveDb({
+    current: -1,
+    plans: [],
+    history: []
+  })
+}
+
 function saveDb(db) {
   return fs.outputJSON(dbPath, db, {
     spaces: 2
