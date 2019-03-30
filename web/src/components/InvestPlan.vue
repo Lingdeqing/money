@@ -127,7 +127,7 @@ import TheadDatePicker from "./TheadDatePicker";
 //   ]
 // }
 
-const API = process.env.NODE_ENV ? `http://localhost:3000/plans/` : '/plans/';
+const API = process.env.NODE_ENV === 'development' ? `http://localhost:3000/plans/` : '/plans/';
 // 接口1 获取页面初始化数据
 async function getInitData(data){
   return (await axios.post(`${API}getInitData`, data)).data;
