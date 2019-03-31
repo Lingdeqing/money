@@ -1,6 +1,5 @@
 .DS_Store
-web/node_modules
-web-v2/node_modules
+node_modules
 /dist
 
 # local env files
@@ -20,4 +19,3 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw*
-db/plans.json
