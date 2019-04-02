@@ -17,10 +17,10 @@
                 <tr  v-for="(item, index) in list" :key="index">
                     <td class="date">{{item.date|day}}</td>
                     <td class="target">{{item.target}}</td>
-                    <td class="assets link">
+                    <td class="assets link" @click="setAssets(item)">
                         {{item.assets || '录入'}}
                     </td>
-                    <td class="pay">
+                    <td class="pay link" @click="setPay(item)">
                         {{item.assets || '买入'}}
                     </td>
                 </tr>
@@ -53,6 +53,12 @@ export default {
             } else {  // 取之前的数据
                 this.list = db.history;
             }
+        },
+        setAssets(){
+
+        },
+        setPay(){
+            
         }
     },
     filters: {

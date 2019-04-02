@@ -88,8 +88,7 @@ router.post('/getInitData', async (ctx, next) => {
     }
   }
 });
-
-router.post('/createPlan', async (ctx, next) => {
+async function setPlan(ctx, next){
   const newPlan = ctx.request.body;
   const db = await fs.readJSON(dbPath);
   db.plans.push(newPlan);
@@ -98,7 +97,24 @@ router.post('/createPlan', async (ctx, next) => {
   ctx.body = {
     code: 0
   }
-});
+}
+async function getPlan(ctx, next){
+  const db = await fs.readJSON(dbPath);
+  if(db.current === -1){
+    ctx.body = {
+      code: 0,
+      data: null
+    };
+  } else {
+    ctx.body = {
+      code: 0,
+      data: db.plans[db.current]
+    };
+  }
+}
+router.post('/createPlan', setPlan);
+router.post('/setPlan', setPlan);
+router.post('/getPlan', getPlan);
 
 router.post('/saveInvest', async (ctx, next) => {
   const invest = ctx.request.body;

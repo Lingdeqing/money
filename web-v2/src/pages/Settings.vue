@@ -19,7 +19,7 @@
 
 <script>
 import { Toast } from 'mint-ui';
-import {mapActions} from 'vuex';
+import {mapActions, mapState} from 'vuex';
 
 export default {
     data(){
@@ -35,7 +35,10 @@ export default {
       this.getPlan()
       .then(plan => {
         if(plan){
-          this.plan = plan;
+          this.plan = {
+            ...plan,
+            start: (new Date(plan.start)).format('yyyy-MM-dd')
+          };
         } else {
           console.log('第一次使用');
         }

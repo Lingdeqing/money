@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API = process.env.NODE_ENV === 'development' ? `http://localhost:3000/plans/` : '/plans/';
+const API = process.env.NODE_ENV === 'development' ? `http://10.234.195.43:3000/plans/` : '/plans/';
 // 接口1 获取页面初始化数据
 export async function getInitData(data){
   return (await axios.post(`${API}getInitData`, data)).data;
@@ -16,10 +16,10 @@ export async function saveInvest(data){
 
 //　获取当前计划
 export async function getPlan(){
-  return null;
+  return (await axios.post(`${API}getPlan`)).data;
 }
 
 //　保存新计划
-export async function setPlan(){
-  return null;
+export async function setPlan(data){
+  return (await axios.post(`${API}setPlan`, data)).data;
 }

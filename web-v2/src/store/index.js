@@ -26,18 +26,12 @@ const store = new Vuex.Store({
     },
     actions: {
         async getPlan(context){
-            const plan = await getPlan();
+            const {data: plan} = await getPlan();
             context.commit('setPlan', plan);
+            return plan;
         },
         async setPlan(context, newPlan){
-            console.log(newPlan)
-            return new Promise((resolve, reject) => {
-                setTimeout(() => {
-                    resolve({
-                        code: 0
-                    });
-                }, 4000)
-            })
+            return setPlan(newPlan);
         }
     }
 });
