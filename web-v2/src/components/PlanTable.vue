@@ -17,11 +17,11 @@
                 <tr  v-for="(item, index) in list" :key="index">
                     <td class="date">{{item.date|day}}</td>
                     <td class="target">{{item.target}}</td>
-                    <td class="assets link" @click="setAssets(item)">
-                        {{item.assets || '录入'}}
+                    <td class="assets link">
+                        <ClickableInput v-model="item.assets" placeholder="录入" @change="setInvest(item)"/>
                     </td>
-                    <td class="pay link" @click="setPay(item)">
-                        {{item.assets || '买入'}}
+                    <td class="pay link">
+                        <ClickableInput v-model="item.pay" placeholder="买入" @change="setInvest(item)"/>
                     </td>
                 </tr>
             </tbody>
@@ -30,8 +30,12 @@
 </template> 
 
 <script>
-import { getInitData } from "@/io";
+import { listInvest, saveInvest } from "@/io";
+import ClickableInput from "@/components/ClickableInput";
 export default {
+    components: {
+        ClickableInput,
+    },
     data(){
         return {
             loading: false,
@@ -46,24 +50,18 @@ export default {
     },
     methods: {
         async getInitData(){
-            const db = await getInitData();
-            if(!db.plan){ // 没有则新建
-                this.$router.push({path: '/settings'})
-                // this.first = true;
-            } else {  // 取之前的数据
-                this.list = db.history;
+            const {code, data} = await listInvest();
+            if(code === 0 && data){
+                this.list = data;
             }
         },
-        setAssets(){
-
-        },
-        setPay(){
-            
-        }
-    },
-    filters: {
-        day(val){
-            return new Date(val).format('yyyy-MM-dd')
+        async setInvest(item){
+            const {code} = await saveInvest(item);
+            if(code === 0){
+                this.$toast({
+                    message: '设置成功'
+                })
+            }
         }
     }
 }
@@ -98,9 +96,6 @@ export default {
     }
     .target, .assets, .pay{
         width: 70px;
-    }
-    .link{
-        color: #0094cd;
     }
 }
 </style>

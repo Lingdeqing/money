@@ -116,6 +116,54 @@ router.post('/createPlan', setPlan);
 router.post('/setPlan', setPlan);
 router.post('/getPlan', getPlan);
 
+router.post('/listInvest', async (ctx, next) => {
+  const db = await fs.readJSON(dbPath);
+  if (db.current === -1) {
+    ctx.body = {
+      code: 0,
+      data: []
+    };
+  } else {
+    const plan = db.plans[db.current];
+    const params = ctx.request.body;
+    const history = [];
+    const allHistories = db.history.sort((a, b) => {  //  从小到大排序
+      return a.date - b.date;
+    });
+    if(params.start){ // 设定起始日期，从起始日期向后查找10条记录
+      allHistories.forEach(item => {
+        if(item.date >= params.start && history.length < 10){
+          history.push(item);
+        }
+      });
+    } else { // 查找到当天的前面的10条记录
+      const oneDay = 1000 * 60 * 60 * 24;
+      const today = parseInt(Date.now() / oneDay);
+      history.push(...allHistories.filter(item => {
+        return parseInt(item.date /oneDay)  <= today;
+      }).slice(-10));
+    }
+
+    // 如果不够10条　则当前计划　从下一个计划日开始补齐　空白记录
+    const nextPlanDate = getNextPlanDay(plan.start);
+    const lastTarget = history.length > 0 ? history[history.length - 1].target : 0;
+    const len = 10 - history.length;
+    for(let i = 0; i < len; i++){
+      history.push({
+        date: nextPlanDate + i * 7 * 24 * 60 * 60 * 1000,
+        target: lastTarget + (1+i) * plan.piece,
+        assets: '',
+        pay: ''
+      })
+    }
+
+    ctx.body = {
+      code: 0,
+      data: history,
+    }
+  }
+});
+
 router.post('/saveInvest', async (ctx, next) => {
   const invest = ctx.request.body;
   const db = await fs.readJSON(dbPath);

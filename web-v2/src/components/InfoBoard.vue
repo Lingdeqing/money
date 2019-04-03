@@ -23,8 +23,11 @@ export default {
             this.$router.push('/settings');
         }
     },
-    mounted(){
-        this.getPlan();
+    async mounted(){
+        const plan = await this.getPlan();
+        if(!plan){
+            this.$router.push({path: '/settings'})
+        }
     }
 }
 </script>

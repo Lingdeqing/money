@@ -14,12 +14,17 @@ export async function saveInvest(data){
   return (await axios.post(`${API}saveInvest`, data)).data;
 }
 
-//　获取当前计划
+// 获取当前表格数据
+export async function listInvest(){
+  return (await axios.post(`${API}listInvest`)).data;
+}
+
+// 获取当前计划
 export async function getPlan(){
   return (await axios.post(`${API}getPlan`)).data;
 }
 
-//　保存新计划
+// 保存新计划
 export async function setPlan(data){
   return (await axios.post(`${API}setPlan`, data)).data;
 }
