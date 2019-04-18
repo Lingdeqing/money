@@ -19,10 +19,12 @@
                     <td class="date">{{item.date|day}}</td>
                     <td class="target">{{item.target}}</td>
                     <td class="assets link">
-                        <ClickableInput v-model="item.assets" placeholder="录入" @change="setInvest(item)"/>
+                        <ClickableInput v-if="canEdit(item)" v-model="item.assets" placeholder="录入" @change="setInvest(item)"/>
+                        <span v-else>-</span>
                     </td>
                     <td class="pay link">
-                        <ClickableInput v-model="item.pay" placeholder="买入" @change="setInvest(item)"/>
+                        <ClickableInput v-if="canEdit(item)" v-model="item.pay" placeholder="买入" @change="setInvest(item)"/>
+                        <span v-else>-</span>
                     </td>
                     <td class="sh1">{{item.sh1||'-'}}</td>
                 </tr>
@@ -58,12 +60,20 @@ export default {
             }
         },
         async setInvest(item){
-            const {code} = await saveInvest(item);
+            const {code, msg} = await saveInvest(item);
             if(code === 0){
                 this.$toast({
                     message: '设置成功'
                 })
+            } else {
+                this.$toast({
+                    message: msg
+                })
             }
+        },
+        canEdit(item){
+            const oneDayTime = 1000 * 60 * 60 * 24;
+            return Math.floor(item.date / oneDayTime) <= Math.floor(Date.now() / oneDayTime);
         }
     }
 }

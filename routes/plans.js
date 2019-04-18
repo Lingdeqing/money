@@ -42,10 +42,15 @@ function getSameWeekDay(t1, t2) {
 function getNextPlanDay(start){
   const now =  Date.now();
   let next = getSameWeekDay(start, now);
-  if(next <= now){
+  if(dayLargerThan(now, next)){
     next = getSameWeekDay(start, now + 1000 * 60 * 60 * 24 * 7);
   }
   return next;
+}
+
+function dayLargerThan(a, b){
+  const oneDayTime = 1000 * 60 * 60 * 24;
+  return Math.floor(a / oneDayTime) > Math.floor(b / oneDayTime)
 }
 
 // 获取当前的上证指数
@@ -154,11 +159,15 @@ router.post('/listInvest', async (ctx, next) => {
 
     // 如果不够10条　则当前计划　从下一个计划日开始补齐　空白记录
     const nextPlanDate = getNextPlanDay(plan.start);
+    let fillDate = nextPlanDate;
+    if(history.length > 0 && isSameDay(history[history.length - 1].date, fillDate)){  //  如果已存历史里面最后一天和下一个计划日是同一天，则填充的起始日再向后一周
+      fillDate += 1000 * 60 * 60 * 24 * 7;
+    }
     const lastTarget = history.length > 0 ? history[history.length - 1].target : 0;
     const len = 10 - history.length;
     for(let i = 0; i < len; i++){
       history.push({
-        date: nextPlanDate + i * 7 * 24 * 60 * 60 * 1000,
+        date: fillDate + i * 7 * 24 * 60 * 60 * 1000,
         target: lastTarget + (1+i) * plan.piece,
         assets: '',
         pay: ''
@@ -183,6 +192,16 @@ router.post('/listInvest', async (ctx, next) => {
 
 router.post('/saveInvest', async (ctx, next) => {
   const invest = ctx.request.body;
+
+  // 不能修改未来的记录
+  if(dayLargerThan(invest.date, Date.now())){
+    ctx.body = {
+      code: 1,
+      msg: '不能修改未来的记录'
+    }
+    return;
+  }
+
   const db = await fs.readJSON(dbPath);
   let overwrite = false;
   db.history.forEach(item => {
