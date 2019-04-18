@@ -1,5 +1,6 @@
 const Router = require('koa-better-router');
 const fs = require('fs-extra');
+const axios = require('axios');
 
 const router = Router({ prefix: '/plans' }).loadMethods();
 
@@ -41,11 +42,18 @@ function getSameWeekDay(t1, t2) {
 function getNextPlanDay(start){
   const now =  Date.now();
   let next = getSameWeekDay(start, now);
-  if(next < now){
+  if(next <= now){
     next = getSameWeekDay(start, now + 1000 * 60 * 60 * 24 * 7);
   }
   return next;
 }
+
+// 获取当前的上证指数
+async function getSh1(){
+  const {data} = await axios.get('http://hq.sinajs.cn/list=s_sh000001');
+  return /"(.+)"/.exec(data)[1].split(',')[1];
+}
+
 router.post('/getInitData', async (ctx, next) => {
   const db = await fs.readJSON(dbPath);
   if (db.current === -1) {
@@ -156,6 +164,15 @@ router.post('/listInvest', async (ctx, next) => {
         pay: ''
       })
     }
+
+    // 给当天设定上证指数
+    const sh1 = await getSh1();
+    const today = Date.now();
+    history.forEach(item => {
+      if(!item.sh1 && isSameDay(item.date, today)){
+        item.sh1 = sh1;
+      }
+    })
 
     ctx.body = {
       code: 0,

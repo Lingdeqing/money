@@ -7,6 +7,7 @@
                     <th class="target">目标</th>
                     <th class="assets">当前资产</th>
                     <th class="pay">实购金额</th>
+                    <th class="sh1">上指</th>
                 </tr>
             </thead>
         </table>
@@ -23,6 +24,7 @@
                     <td class="pay link">
                         <ClickableInput v-model="item.pay" placeholder="买入" @change="setInvest(item)"/>
                     </td>
+                    <td class="sh1">{{item.sh1||'-'}}</td>
                 </tr>
             </tbody>
         </table>
@@ -73,6 +75,7 @@ export default {
         width: 100%;
     }
     td, th{
+        font-size: 12px;
         text-align: center;
         line-height: 30px;
         font-weight: normal;
@@ -92,10 +95,13 @@ export default {
         color: #000;
     }
     .date{
-        width: 90px;
+        width: 60px;
     }
     .target, .assets, .pay{
         width: 70px;
+    }
+    .sh1{
+        width: 100px;
     }
 }
 </style>

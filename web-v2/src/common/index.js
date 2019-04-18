@@ -32,5 +32,5 @@ Date.prototype.format = function(format) {
   };
 
 Vue.filter('day', function (val) {
-    return new Date(val).format('yyyy-MM-dd')
+    return new Date(val).format('MM-dd')
 });
